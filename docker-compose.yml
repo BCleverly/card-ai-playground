@@ -28,6 +28,8 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     command: server /data --console-address ":9001"
+    networks:
+      - app-network
 
   postgres:
     image: postgres:16
@@ -45,6 +47,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
 
   label-studio:
     image: heartexlabs/label-studio:latest
@@ -58,14 +62,36 @@ services:
       - POSTGRE_HOST=postgres
       - POSTGRE_PORT=5432
       - LABEL_STUDIO_HOST=${LABEL_STUDIO_HOST:-http://localhost:8080}
+      - LABEL_STUDIO_USERNAME=${LABEL_STUDIO_USER}
+      - LABEL_STUDIO_PASSWORD=${LABEL_STUDIO_PASSWORD}
+      # MinIO (S3) configuration
+      - LABEL_STUDIO_STORAGE_TYPE=s3
+      - LABEL_STUDIO_STORAGE_S3_ENDPOINT=http://minio:9000
+      - LABEL_STUDIO_STORAGE_S3_ACCESS_KEY=${MINIO_ROOT_USER}
+      - LABEL_STUDIO_STORAGE_S3_SECRET_KEY=${MINIO_ROOT_PASSWORD}
+      - LABEL_STUDIO_STORAGE_S3_BUCKET_NAME=${LABEL_STUDIO_S3_BUCKET_NAME}
+      - LABEL_STUDIO_STORAGE_S3_REGION_NAME=${LABEL_STUDIO_S3_REGION_NAME:-us-east-1}
+      - LABEL_STUDIO_STORAGE_S3_FILE_LRU_CACHE_TIME=1
+      - LABEL_STUDIO_STORAGE_S3_PRESIGN_TTL=3600
+      # Use MinIO as the default storage
+      - LABEL_STUDIO_STORAGE_PERSISTENCE=1
     volumes:
       - label_studio_data:/label-studio/data
     depends_on:
       postgres:
         condition: service_healthy
+      minio:
+        condition: service_started
+    command: label-studio start
     restart: unless-stopped
+    networks:
+      - app-network
 
 volumes:
   minio_data:
   postgres_data:
   label_studio_data:
+
+networks:
+  app-network:
+    driver: bridge
