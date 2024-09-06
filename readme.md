@@ -43,9 +43,10 @@ Follow these steps to set up and run the project:
    docker-compose up -d --build
    ```
 
-6. Access the application:
+6. Access the applications:
    - Web application: http://localhost
    - MinIO console: http://localhost:9001
+   - Label Studio: http://localhost:8080
 
 ## Project Structure
 

@@ -35,8 +35,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_MULTIPLE_DATABASES: ${POSTGRES_MULTIPLE_DATABASES}
-    ports:
-      - "5432:5432"
+      LABEL_STUDIO_POSTGRES_DB: ${LABEL_STUDIO_POSTGRES_DB}
+      WEB_POSTGRES_DB: ${WEB_POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres-init:/docker-entrypoint-initdb.d
@@ -46,6 +46,26 @@ services:
       timeout: 5s
       retries: 5
 
+  label-studio:
+    image: heartexlabs/label-studio:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - DJANGO_DB=postgresql
+      - POSTGRE_NAME=${LABEL_STUDIO_POSTGRES_DB}
+      - POSTGRE_USER=${POSTGRES_USER}
+      - POSTGRE_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRE_HOST=postgres
+      - POSTGRE_PORT=5432
+      - LABEL_STUDIO_HOST=${LABEL_STUDIO_HOST:-http://localhost:8080}
+    volumes:
+      - label_studio_data:/label-studio/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   minio_data:
   postgres_data:
+  label_studio_data:
