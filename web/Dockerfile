@@ -26,3 +26,6 @@ COPY src/ .
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html
+
+# Install Redis extension
+RUN pecl install redis && docker-php-ext-enable redis

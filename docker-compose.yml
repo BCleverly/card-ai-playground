@@ -5,6 +5,11 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./web/src:/var/www/html
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
 
   nginx:
     build:
@@ -75,6 +80,8 @@ services:
       - LABEL_STUDIO_STORAGE_S3_PRESIGN_TTL=3600
       # Use MinIO as the default storage
       - LABEL_STUDIO_STORAGE_PERSISTENCE=1
+      - LABEL_STUDIO_REDIS_HOST=redis
+      - LABEL_STUDIO_REDIS_PORT=6379
     volumes:
       - label_studio_data:/label-studio/data
     depends_on:
@@ -82,8 +89,25 @@ services:
         condition: service_healthy
       minio:
         condition: service_started
+      redis:
+        condition: service_healthy
     command: label-studio start
     restart: unless-stopped
+    networks:
+      - app-network
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - app-network
 
@@ -91,6 +115,7 @@ volumes:
   minio_data:
   postgres_data:
   label_studio_data:
+  redis_data:
 
 networks:
   app-network:
