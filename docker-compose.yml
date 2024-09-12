@@ -7,31 +7,19 @@ services:
       - ./web/src:/var/www/html
     depends_on:
       - redis
-      - postgres
-      - minio
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=${WEB_POSTGRES_DB}
-      - DB_USER=${POSTGRES_USER}
-      - DB_PASSWORD=${POSTGRES_PASSWORD}
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER}
-      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD}
-      - MINIO_BUCKET=${WEB_MINIO_BUCKET_NAME}
     networks:
       - app-network
 
   nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
+    image: nginx:alpine
     ports:
       - "80:80"
     volumes:
       - ./web/src:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - web
     networks:
@@ -97,8 +85,10 @@ services:
       - LABEL_STUDIO_STORAGE_PERSISTENCE=1
       - LABEL_STUDIO_REDIS_HOST=redis
       - LABEL_STUDIO_REDIS_PORT=6379
+      - LABEL_STUDIO_AUTH_TOKEN=${LABEL_STUDIO_AUTH_TOKEN}
     volumes:
       - label_studio_data:/label-studio/data
+      - ./label-studio/entrypoint.sh:/entrypoint.sh
     depends_on:
       postgres:
         condition: service_healthy
@@ -106,7 +96,7 @@ services:
         condition: service_started
       redis:
         condition: service_healthy
-    command: label-studio start
+    entrypoint: ["/entrypoint.sh"]
     restart: unless-stopped
     networks:
       - app-network

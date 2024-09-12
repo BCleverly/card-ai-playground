@@ -2,30 +2,30 @@ FROM php:8.3-fpm
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
-    libxml2-dev \
-    libcurl4-openssl-dev \
-    libonig-dev \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    zip \
+    unzip
 
-# Install and enable PHP extensions
-RUN docker-php-ext-install \
-    mbstring \
-    pdo \
-    pdo_mysql \
-    xml \
-    pdo_pgsql
+# Configure and install PHP extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd pdo pdo_mysql
 
-# OpenSSL, PCRE, and Hash are already included in the base image
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Set the working directory
+# Set working directory
 WORKDIR /var/www/html
 
-# Copy the PHP files
+# Copy application files
 COPY src/ .
 
 # Set permissions
-RUN chown -R www-data:www-data /var/www/html
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html/storage
 
-# Install Redis extension
-RUN pecl install redis && docker-php-ext-enable redis
+# Expose port 9000 for PHP-FPM
+EXPOSE 9000
+
+CMD ["php-fpm"]
