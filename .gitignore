@@ -1,1 +1,57 @@
+# Ignore the entire web/src directory (cloned GitHub repo)
+/web/src/
+
+# Ignore environment files
 .env
+.env.*
+!.env.example
+
+# Ignore composer dependencies
+/vendor/
+
+# Ignore node modules
+/node_modules/
+
+# Ignore logs
+*.log
+
+# Ignore OS generated files
+.DS_Store
+Thumbs.db
+
+# Ignore PHP Storm project files
+.idea/
+
+# Ignore VS Code project files
+.vscode/
+
+# Ignore cache and temp files
+*.cache
+*.tmp
+
+# Ignore database files
+*.sqlite
+*.db
+
+# Ignore compiled files
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Ignore packaged files
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Ignore backup files
+*.bak
+*.swp
+*~
